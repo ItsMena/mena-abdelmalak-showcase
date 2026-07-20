@@ -1,13 +1,13 @@
 import { createSelector } from 'reselect';
 import type { RootState } from './store';
-import { cellId, toSaveRequest } from '../api/mappers';
+import { cellId } from '../api/mapDepletions';
 
 // Totals and run-rate are derived state — computed, never stored. Storing a
 // total means keeping it in sync with every edit, and that desync is where
 // dashboards start lying. reselect memoizes each one so it recomputes only
 // when its inputs change, not on every render.
 
-const selectCells = (state: RootState) => state.depletions.present.cells;
+const selectCells = (state: RootState) => state.depletions.cells;
 const selectAccounts = (state: RootState) => state.depletions.accounts;
 const selectPeriods = (state: RootState) => state.depletions.periods;
 
@@ -48,15 +48,5 @@ export const selectRunRate = createSelector(
 );
 
 export const selectDirtyCount = createSelector([selectCells], (cells) =>
-  Object.values(cells).filter((c) => c.status === 'dirty').length,
+  Object.values(cells).filter((c) => c.value !== c.savedValue).length,
 );
-
-// A live preview of the exact POST body the next save will send — recomputed
-// from the dirty cells as you type.
-export const selectSaveRequestPreview = createSelector([selectCells], (cells) =>
-  toSaveRequest(cells),
-);
-
-export const selectIsSaving = (state: RootState) => state.depletions.activeSaveId !== null;
-export const selectCanUndo = (state: RootState) => state.depletions.past.length > 0;
-export const selectCanRedo = (state: RootState) => state.depletions.future.length > 0;

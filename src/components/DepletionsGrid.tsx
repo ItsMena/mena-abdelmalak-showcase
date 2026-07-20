@@ -1,17 +1,19 @@
 import { useAppDispatch, useAppSelector } from '../store/store';
-import { editCell } from '../store/depletionsSlice';
-import { cellId } from '../api/mappers';
+import { editCell, saveChanges } from '../store/depletionsSlice';
+import { cellId } from '../api/mapDepletions';
 import {
   selectColumnTotals,
+  selectDirtyCount,
   selectGrandTotal,
   selectRowTotals,
   selectRunRate,
 } from '../store/selectors';
-import { Annotation } from './Annotation';
 
+// One cell subscribes to just its own slice of state, so a keystroke re-renders
+// that input alone — not the whole grid.
 function Cell({ id }: { id: string }) {
   const dispatch = useAppDispatch();
-  const cell = useAppSelector((s) => s.depletions.present.cells[id]);
+  const cell = useAppSelector((s) => s.depletions.cells[id]);
   if (!cell) return <td className="grid__cell" />;
 
   return (
@@ -26,32 +28,41 @@ function Cell({ id }: { id: string }) {
   );
 }
 
-export function Grid() {
+export function DepletionsGrid() {
+  const dispatch = useAppDispatch();
   const status = useAppSelector((s) => s.depletions.status);
   const accounts = useAppSelector((s) => s.depletions.accounts);
   const periods = useAppSelector((s) => s.depletions.periods);
+  const saving = useAppSelector((s) => s.depletions.saving);
+  const dirty = useAppSelector(selectDirtyCount);
   const columnTotals = useAppSelector(selectColumnTotals);
   const rowTotals = useAppSelector(selectRowTotals);
   const grandTotal = useAppSelector(selectGrandTotal);
   const runRate = useAppSelector(selectRunRate);
 
-  if (status === 'loading' || status === 'idle') {
+  if (status === 'idle' || status === 'loading') {
     return <div className="grid__loading">Loading depletions…</div>;
   }
 
   return (
     <div className="grid">
+      <div className="grid__bar">
+        <span className={`pill ${dirty ? 'pill--dirty' : 'pill--clean'}`}>
+          {dirty ? `${dirty} unsaved` : 'all saved'}
+        </span>
+        <button
+          className="btn btn--primary"
+          disabled={saving || dirty === 0}
+          onClick={() => dispatch(saveChanges())}
+        >
+          {saving ? 'Saving…' : 'Save changes'}
+        </button>
+      </div>
+
       <table className="grid__table">
         <thead>
           <tr>
-            <th className="grid__corner">
-              Account
-              <Annotation title="Grid built from the GET response">
-                On load we fetch <code>/api/v1/depletions</code> and the mapper turns that
-                payload into these rows, columns, and a flat keyed cell map. See the
-                <em> Live API</em> and <em> mappers.ts</em> tabs.
-              </Annotation>
-            </th>
+            <th className="grid__corner">Account</th>
             {periods.map((p) => (
               <th key={p.iso} className="grid__period">
                 {p.label}

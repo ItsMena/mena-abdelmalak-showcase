@@ -1,12 +1,11 @@
 import { useState } from 'react';
 // `?raw` imports each file's text at build time, so the source shown here is
 // exactly what runs — the two can't drift apart.
+import mapSrc from '../api/mapDepletions.ts?raw';
+import gridSrc from './DepletionsGrid.tsx?raw';
 import sliceSrc from '../store/depletionsSlice.ts?raw';
-import mappersSrc from '../api/mappers.ts?raw';
-import apiTypesSrc from '../types/api.ts?raw';
 import { highlightLine } from './highlight';
 import { useAppSelector } from '../store/store';
-import { selectSaveRequestPreview } from '../store/selectors';
 
 function CodeBlock({ code }: { code: string }) {
   const lines = code.replace(/\n$/, '').split('\n');
@@ -27,34 +26,32 @@ function CodeBlock({ code }: { code: string }) {
   );
 }
 
-// The live tab: the exact JSON going over the wire. The request is a live
-// preview derived from the dirty cells; the response is whatever the backend
-// last returned (GET on load, POST after a save).
+// The live tab tells the whole read story: the request we send, and the exact
+// JSON that comes back and gets mapped into the grid.
 function LiveApi() {
-  const request = useAppSelector(selectSaveRequestPreview);
-  const exchange = useAppSelector((s) => s.depletions.exchange);
+  const response = useAppSelector((s) => s.depletions.response);
 
   return (
     <div className="live">
       <div className="live__section">
         <div className="live__label">
-          <span className="live__verb live__verb--post">POST</span>
-          /api/v1/depletions:save
-          <span className="live__note">request body — live preview from dirty cells</span>
+          <span className="live__verb live__verb--get">GET</span>
+          /api/v1/depletions
+          <span className="live__note">the request</span>
         </div>
-        <CodeBlock code={JSON.stringify(request, null, 2)} />
+        <CodeBlock code={'GET /api/v1/depletions HTTP/1.1\nAccept: application/json'} />
       </div>
 
       <div className="live__section">
         <div className="live__label">
-          <span className="live__verb live__verb--res">{exchange?.endpoint.split(' ')[0]}</span>
-          {exchange ? exchange.endpoint.split(' ')[1] : '—'}
-          <span className="live__note">last response</span>
+          <span className="live__verb live__verb--res">200</span>
+          response
+          <span className="live__note">mapped into the grid by mapDepletions.ts</span>
         </div>
-        {exchange ? (
-          <CodeBlock code={JSON.stringify(exchange.response, null, 2)} />
+        {response ? (
+          <CodeBlock code={JSON.stringify(response, null, 2)} />
         ) : (
-          <p className="live__empty">No response yet.</p>
+          <p className="live__empty">Loading…</p>
         )}
       </div>
     </div>
@@ -63,22 +60,22 @@ function LiveApi() {
 
 const SOURCE_TABS = [
   {
+    id: 'map',
+    label: 'mapDepletions.ts',
+    blurb: 'How we manipulate it: the pure transform from wire payload into grid state.',
+    code: mapSrc,
+  },
+  {
+    id: 'grid',
+    label: 'DepletionsGrid.tsx',
+    blurb: 'How we display it: the component that renders the mapped data.',
+    code: gridSrc,
+  },
+  {
     id: 'slice',
     label: 'depletionsSlice.ts',
-    blurb: 'Optimistic edits, undo/redo history, and the race-safe load & save thunks.',
+    blurb: 'The store: the load & save thunks and the reducers that hold it together.',
     code: sliceSrc,
-  },
-  {
-    id: 'mappers',
-    label: 'mappers.ts',
-    blurb: 'The pure transform layer: wire payload → grid, and dirty cells → POST body.',
-    code: mappersSrc,
-  },
-  {
-    id: 'api',
-    label: 'types/api.ts',
-    blurb: 'The request/response contract — the exact shapes the backend speaks.',
-    code: apiTypesSrc,
   },
 ] as const;
 
@@ -111,7 +108,7 @@ export function CodePanel() {
       {active === 'live' ? (
         <>
           <p className="code__blurb">
-            The actual JSON on the wire. Edit a cell to watch the request body update.
+            How we get the data: the real GET request and the JSON response behind the grid.
           </p>
           <LiveApi />
         </>

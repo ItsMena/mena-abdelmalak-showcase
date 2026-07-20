@@ -8,12 +8,11 @@ import type {
   SaveDepletionsRequest,
 } from '../types';
 
-// The single translation layer between the API's wire format and the domain
-// shapes the UI works with. Pure functions, no side effects — trivial to read,
-// trivial to unit test.
+// The single translation layer between the API's wire format and the shapes
+// the UI renders. Pure functions — no state, no side effects, trivial to test.
 
-// Grid cells are keyed flat. Composing and parsing that key lives here so the
-// format is defined in exactly one place.
+// Grid cells are stored flat, keyed by account + period. Composing and parsing
+// that key lives here so the format is defined in exactly one place.
 export const cellId = (accountId: string, periodIso: string) => `${accountId}:${periodIso}`;
 export const parseCellId = (id: string): { accountId: string; period: string } => {
   const [accountId, period] = id.split(':');
@@ -30,9 +29,9 @@ export const channelLabel = (channel: AccountDTO['channel']): Channel =>
   channel === 'ON_PREMISE' ? 'On-Premise' : 'Off-Premise';
 
 /**
- * The core "generate the grid from the response" step. Takes the raw GET
- * payload and produces everything the grid renders: display-ready accounts,
- * the ordered list of period columns, and the flat, keyed cell map.
+ * The heart of it: turn the raw GET payload into everything the grid renders —
+ * display-ready accounts, the ordered period columns, and the flat, keyed cell
+ * map that makes any cell an O(1) lookup.
  */
 export function toGridState(res: DepletionsResponse): {
   accounts: Account[];
@@ -62,12 +61,9 @@ export function toGridState(res: DepletionsResponse): {
 }
 
 /**
- * The reverse trip: collect the cells that need saving and shape them into the
- * POST body. "Needs saving" is defined by data, not by the presentational
- * `status` — a cell is unsaved whenever its on-screen value differs from the
- * server-confirmed one. That keeps this correct no matter what label the cell
- * is wearing (`dirty` while editing, `saving` once a write is in flight).
- * An idempotency key lets the server safely dedupe a retried save.
+ * The reverse trip: collect the cells whose on-screen value differs from the
+ * server-confirmed one, and shape them into the POST body. Defining "changed"
+ * by the data (not the visual status) keeps it correct regardless of labels.
  */
 export function toSaveRequest(cells: Cells): SaveDepletionsRequest {
   const changes = Object.entries(cells)
