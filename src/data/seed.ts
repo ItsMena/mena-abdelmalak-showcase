@@ -1,8 +1,5 @@
 import type { AccountDTO, DepletionRecordDTO } from '../types';
 
-// Raw fixtures the mock backend serves. Synthetic accounts, synthetic numbers —
-// shaped exactly like a real API payload (server-side enums, 'YYYY-MM' periods).
-
 export const PERIOD_ISOS = [
   '2026-01',
   '2026-02',
@@ -23,7 +20,6 @@ export const RAW_ACCOUNTS: AccountDTO[] = [
   { id: 'acc-08', name: 'The Alder Room', channel: 'ON_PREMISE' },
 ];
 
-// Deterministic pseudo-values so reloads look stable.
 function seedUnits(accountId: string, periodIndex: number): number {
   const base = accountId.charCodeAt(4) + accountId.charCodeAt(5);
   return ((base * 13 + periodIndex * 21 + 3) % 140) + 20;

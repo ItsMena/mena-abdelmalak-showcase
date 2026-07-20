@@ -1,4 +1,3 @@
-// Barrel re-export so consumers import from a single `../types` entry point.
 export type {
   Account,
   Channel,

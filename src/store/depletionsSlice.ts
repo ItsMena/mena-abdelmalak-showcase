@@ -10,7 +10,6 @@ export interface DepletionsState {
   cells: Cells;
   saving: boolean;
   lastError: string | null;
-  // The raw GET payload, kept so the UI can show the exact response we mapped.
   response: DepletionsResponse | null;
 }
 
@@ -24,10 +23,8 @@ const initialState: DepletionsState = {
   response: null,
 };
 
-// GET the data: fetch the payload, hand it to the mapper, done.
 export const loadDepletions = createAsyncThunk('depletions/load', () => fetchDepletions());
 
-// Save the edits: build the POST body from the changed cells and send it.
 export const saveChanges = createAsyncThunk('depletions/save', (_, { getState }) => {
   const { cells } = (getState() as { depletions: DepletionsState }).depletions;
   return saveDepletions(toSaveRequest(cells));
@@ -37,8 +34,6 @@ const depletionsSlice = createSlice({
   name: 'depletions',
   initialState,
   reducers: {
-    // Optimistic edit: the cell updates on screen immediately. `status` is
-    // derived from the value, so editing back to the saved number clears it.
     editCell(state, action: PayloadAction<{ id: string; value: number }>) {
       const cell = state.cells[action.payload.id];
       if (!cell) return;
@@ -51,7 +46,6 @@ const depletionsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // ── load (GET) ──────────────────────────────────────────────────
       .addCase(loadDepletions.pending, (state) => {
         state.status = 'loading';
       })
@@ -67,13 +61,9 @@ const depletionsSlice = createSlice({
         state.status = 'error';
         state.lastError = action.error.message ?? 'Failed to load';
       })
-      // ── save (POST) ─────────────────────────────────────────────────
       .addCase(saveChanges.pending, (state) => {
         state.saving = true;
         state.lastError = null;
-        // Any cell whose value differs from the saved one is being saved —
-        // this includes cells retried after a previous failure, not just
-        // freshly-edited ones.
         for (const cell of Object.values(state.cells)) {
           if (cell.value !== cell.savedValue) cell.status = 'saving';
         }

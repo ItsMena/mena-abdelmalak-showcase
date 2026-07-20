@@ -1,6 +1,4 @@
 import { useState } from 'react';
-// `?raw` imports each file's text at build time, so the source shown here is
-// exactly what runs — the two can't drift apart.
 import mapSrc from '../api/mapDepletions.ts?raw';
 import gridSrc from './DepletionsGrid.tsx?raw';
 import sliceSrc from '../store/depletionsSlice.ts?raw';
@@ -26,8 +24,6 @@ function CodeBlock({ code }: { code: string }) {
   );
 }
 
-// The live tab tells the whole read story: the request we send, and the exact
-// JSON that comes back and gets mapped into the grid.
 function LiveApi() {
   const response = useAppSelector((s) => s.depletions.response);
 

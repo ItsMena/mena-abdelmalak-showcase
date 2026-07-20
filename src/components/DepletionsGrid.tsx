@@ -9,8 +9,6 @@ import {
   selectRunRate,
 } from '../store/selectors';
 
-// One cell subscribes to just its own slice of state, so a keystroke re-renders
-// that input alone — not the whole grid.
 function Cell({ id }: { id: string }) {
   const dispatch = useAppDispatch();
   const cell = useAppSelector((s) => s.depletions.cells[id]);

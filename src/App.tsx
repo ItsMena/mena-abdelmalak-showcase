@@ -8,7 +8,6 @@ export default function App() {
   const dispatch = useAppDispatch();
   const lastError = useAppSelector((s) => s.depletions.lastError);
 
-  // Fetch the grid once on mount — GET → mapper → populated state.
   useEffect(() => {
     dispatch(loadDepletions());
   }, [dispatch]);

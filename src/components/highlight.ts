@@ -1,7 +1,3 @@
-// A tiny, dependency-free TypeScript highlighter — just enough to make the
-// code panel readable. Runs per line (the source uses only `//` comments, so
-// no token ever spans a line break).
-
 const KEYWORDS =
   'import|export|from|default|const|let|var|function|return|if|else|for|of|in|' +
   'type|interface|extends|implements|async|await|new|class|this|void|null|' +
@@ -9,11 +5,11 @@ const KEYWORDS =
 
 const TOKEN = new RegExp(
   [
-    '(\\/\\/[^\\n]*)', // 1 line comment
-    "('(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\"|`(?:[^`\\\\]|\\\\.)*`)", // 2 string
-    `\\b(${KEYWORDS})\\b`, // 3 keyword
-    '\\b([A-Z][A-Za-z0-9_]*)\\b', // 4 type / capitalized
-    '\\b(\\d+(?:\\.\\d+)?)\\b', // 5 number
+    '(\\/\\/[^\\n]*)',
+    "('(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\"|`(?:[^`\\\\]|\\\\.)*`)",
+    `\\b(${KEYWORDS})\\b`,
+    '\\b([A-Z][A-Za-z0-9_]*)\\b',
+    '\\b(\\d+(?:\\.\\d+)?)\\b',
   ].join('|'),
   'g',
 );
